@@ -1,0 +1,9 @@
+# Netlify rules. Only Netlify reads this file; `npm start` ignores it (local runs use the "proxy" in package.json).
+# The first rule that matches wins, so the API rule must stay above the catch-all.
+
+# Pass every API request on to the server. The browser only ever talks to this site's own address,
+# so the login cookie belongs to it and the server needs no allowed-origin entry for it.
+/api/*  https://feeding-program-server.onrender.com/api/:splat  200
+
+# Every other address is a page of the React app (keeps a reload of e.g. /admin/accounts working)
+/*  /index.html  200

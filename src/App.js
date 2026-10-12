@@ -11,6 +11,7 @@ import ChangePassword from './pages/ChangePassword';
 import Students from './pages/Students';
 import FeedingProgram from './pages/FeedingProgram';
 import Profile from './pages/Profile';
+import Tutorial from './pages/Tutorial';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminSchools from './pages/AdminSchools';
 import AdminAccounts from './pages/AdminAccounts';
@@ -30,6 +31,8 @@ function App() {
           <Route path="/dashboard" element={<RequireRole role={ROLE_TEACHER}><Dashboard /></RequireRole>}></Route>
           <Route path="/Students" element={<RequireRole role={ROLE_TEACHER}><Students /></RequireRole>}></Route>
           <Route path="/FeedingProgram" element={<RequireRole role={ROLE_TEACHER}><FeedingProgram /></RequireRole>}></Route>
+          {/* Guide for teachers. It has no sidebar; open a guide directly with /tutorial?tab=section|student|bmi|session */}
+          <Route path="/tutorial" element={<RequireRole role={ROLE_TEACHER}><Tutorial /></RequireRole>}></Route>
 
           {/* Admin pages: a teacher who opens one is sent to /dashboard.
               Every page under /admin must be wrapped the same way. */}

@@ -1,0 +1,934 @@
+/* Teacher Tutorial page.
+   No sidebar: a top bar with the logo and a Back button, a dark green hero with one card per guide,
+   then the active guide: the walkthrough and its steps side by side, and the rest as cards below.
+   Uses the app's green (--main-green); the dark greens below are only used on this page. */
+
+.tutorial-page {
+  --tutorial-ink: #0b2e1c;
+  --tutorial-deep: #0f3d26;
+  --tutorial-mint: #86efac;
+  --tutorial-width: 80rem;
+
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f7fa;
+  color: #374151;
+  text-align: left;
+}
+
+/* ---------- Top bar ---------- */
+.tutorial-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 2rem;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tutorial-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 0.5rem;
+}
+
+.tutorial-brand img {
+  width: 2.75rem;
+  height: 2.75rem;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.tutorial-brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tutorial-brand-text strong {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.tutorial-brand-text small {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.tutorial-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0.5625rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background-color: #ffffff;
+  color: #374151;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.tutorial-back:hover {
+  background-color: #f3f4f6;
+}
+
+.tutorial-back svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.tutorial-brand:focus-visible,
+.tutorial-back:focus-visible,
+.tutorial-tab:focus-visible,
+.tutorial-stage-side-scroll:focus-visible {
+  outline: 2px solid var(--main-green, #31aa4d);
+  outline-offset: 2px;
+}
+
+/* On the dark areas the focus ring is light, so it stays visible */
+.tutorial-hero-card:focus-visible,
+.tutorial-video-play:focus-visible,
+.tutorial-walkthrough-start:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* Small green label above a title */
+.tutorial-eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #166534;
+}
+
+/* ---------- Hero ---------- */
+.tutorial-hero {
+  background:
+    radial-gradient(60rem 26rem at 50% -6rem, rgba(75, 214, 107, 0.2), transparent 70%),
+    linear-gradient(165deg, var(--tutorial-ink) 0%, var(--tutorial-deep) 55%, var(--tutorial-ink) 100%);
+  color: #d7eadd;
+}
+
+/* The bottom padding leaves room for the guide tabs, which overlap the hero */
+.tutorial-hero-inner {
+  width: 100%;
+  max-width: var(--tutorial-width);
+  margin: 0 auto;
+  padding: 3.5rem 2rem 5.5rem;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.tutorial-hero .tutorial-eyebrow {
+  color: var(--tutorial-mint);
+}
+
+.tutorial-hero h1 {
+  margin: 0.875rem auto 0;
+  max-width: 46rem;
+  font-size: clamp(1.875rem, 1.2rem + 2.4vw, 3rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  text-wrap: balance;
+}
+
+.tutorial-hero-intro {
+  margin: 1rem auto 0;
+  max-width: 40rem;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.tutorial-hero-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 2.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tutorial-hero-cards li {
+  display: flex;
+}
+
+.tutorial-hero-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 1.25rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.tutorial-hero-card:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.32);
+  transform: translateY(-2px);
+}
+
+.tutorial-hero-card.active {
+  background-color: rgba(134, 239, 172, 0.12);
+  border-color: var(--tutorial-mint);
+}
+
+.tutorial-hero-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 0.75rem;
+  color: var(--tutorial-mint);
+}
+
+.tutorial-hero-card-number {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.tutorial-hero-card-top svg {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  border: 1px solid rgba(134, 239, 172, 0.35);
+  border-radius: 0.75rem;
+}
+
+.tutorial-hero-card strong {
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #ffffff;
+}
+
+.tutorial-hero-card-summary {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.tutorial-hero-note {
+  margin: 1.5rem 0 0;
+  font-size: 0.875rem;
+  color: #b3d1bd;
+}
+
+/* ---------- Main column ---------- */
+.tutorial-main {
+  flex: 1;
+  width: 100%;
+  max-width: var(--tutorial-width);
+  margin: -3.25rem auto 0;
+  padding: 0 2rem 1rem;
+  box-sizing: border-box;
+}
+
+/* ---------- Tabs (top edge of the guide card) ---------- */
+.tutorial-tabs {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.625rem;
+  padding: 0.875rem;
+  border: 1px solid #e5e7eb;
+  border-bottom: none;
+  border-radius: 1.25rem 1.25rem 0 0;
+  background-color: #ffffff;
+  /* Keeps the tabs clear of the sticky top bar when a hero card scrolls to them */
+  scroll-margin-top: 5.5rem;
+}
+
+.tutorial-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  background-color: #f9fafb;
+  color: #374151;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.tutorial-tab:hover {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.tutorial-tab.active {
+  background-color: #eaf6ec;
+  border-color: var(--main-green, #31aa4d);
+  box-shadow: inset 0 3px 0 var(--main-green, #31aa4d);
+  color: #111827;
+}
+
+.tutorial-tab-number {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #6b7280;
+}
+
+.tutorial-tab.active .tutorial-tab-number {
+  color: #166534;
+}
+
+/* ---------- Guide (the active tab) ---------- */
+.tutorial-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Walkthrough and steps side by side: the bottom part of the guide card */
+.tutorial-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24rem;
+  border: 1px solid #e5e7eb;
+  border-top: none;
+  border-radius: 0 0 1.25rem 1.25rem;
+  background-color: #ffffff;
+  box-shadow: 0 18px 40px -24px rgba(11, 46, 28, 0.35);
+  overflow: hidden;
+}
+
+.tutorial-stage-media {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: 1.25rem;
+  background-color: var(--tutorial-ink);
+  color: #d7eadd;
+}
+
+.tutorial-stage-media h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--tutorial-mint);
+}
+
+.tutorial-walkthrough-note {
+  margin: 0 0 0.875rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.tutorial-walkthrough-note strong {
+  color: #ffffff;
+}
+
+/* The steps take the height of the walkthrough and scroll inside it */
+.tutorial-stage-side {
+  position: relative;
+  min-width: 0;
+  border-left: 1px solid #e5e7eb;
+}
+
+.tutorial-stage-side-scroll {
+  position: absolute;
+  inset: 0;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.tutorial-stage-side h2 {
+  margin: 0.5rem 0 0;
+  font-size: 1.625rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: #111827;
+}
+
+.tutorial-purpose {
+  margin: 0.5rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: #4b5563;
+}
+
+.tutorial-stage-side h3 {
+  margin: 1.25rem 0 0.875rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #166534;
+}
+
+.tutorial-stage-side h4 {
+  margin: 0 0 0.625rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* ---------- Cards below the walkthrough ---------- */
+.tutorial-block {
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  background-color: #ffffff;
+}
+
+.tutorial-block h3 {
+  margin: 0 0 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #166534;
+}
+
+.tutorial-block h4 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.tutorial-block p {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.tutorial-block strong,
+.tutorial-stage-side strong {
+  color: #111827;
+}
+
+/* list-style is set here because the app's base stylesheet removes bullets from every list */
+.tutorial-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  list-style: disc;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.tutorial-list li + li {
+  margin-top: 0.375rem;
+}
+
+.tutorial-list li::marker {
+  color: var(--main-green, #31aa4d);
+}
+
+/* ---------- Steps ---------- */
+.tutorial-steps-group + .tutorial-steps-group {
+  margin-top: 1.5rem;
+}
+
+.tutorial-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: tutorial-step;
+}
+
+.tutorial-steps li {
+  position: relative;
+  padding: 0.1875rem 0 0.1875rem 2.5rem;
+  min-height: 1.75rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  counter-increment: tutorial-step;
+}
+
+.tutorial-steps li + li {
+  margin-top: 0.75rem;
+}
+
+.tutorial-steps li::before {
+  content: counter(tutorial-step);
+  position: absolute;
+  left: 0;
+  top: 0.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background-color: #e7f1e3;
+  color: #166534;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+/* ---------- Video (16:9) ---------- */
+.tutorial-video {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  box-sizing: border-box;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  text-align: center;
+}
+
+.tutorial-video-empty {
+  padding: 1rem;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  color: #d7eadd;
+  font-size: 0.875rem;
+}
+
+.tutorial-video-empty svg {
+  width: 3rem;
+  height: 3rem;
+  color: var(--tutorial-mint);
+}
+
+.tutorial-video-empty strong {
+  font-size: 1.0625rem;
+  color: #ffffff;
+}
+
+.tutorial-video-play,
+.tutorial-walkthrough-start {
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background:
+    radial-gradient(24rem 14rem at 50% 45%, rgba(75, 214, 107, 0.22), transparent 70%),
+    var(--tutorial-deep);
+  color: #d7eadd;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.tutorial-video-play:hover,
+.tutorial-walkthrough-start:hover {
+  border-color: var(--tutorial-mint);
+}
+
+.tutorial-video-play strong,
+.tutorial-walkthrough-start strong {
+  font-size: 1.1875rem;
+  color: #ffffff;
+}
+
+.tutorial-video-play-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 999px;
+  background-color: var(--main-green, #31aa4d);
+  color: #ffffff;
+  box-shadow: 0 0 0 0.5rem rgba(75, 214, 107, 0.18);
+  transition: transform 0.2s;
+}
+
+.tutorial-video-play:hover .tutorial-video-play-icon,
+.tutorial-walkthrough-start:hover .tutorial-video-play-icon {
+  transform: scale(1.06);
+}
+
+.tutorial-video-play-icon svg {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.tutorial-video iframe,
+.tutorial-walkthrough iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background-color: #ffffff;
+}
+
+/* ---------- Interactive walkthrough ---------- */
+/* 500px is the height the walkthrough player is made for */
+.tutorial-walkthrough {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  width: 100%;
+  height: 500px;
+  box-sizing: border-box;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  text-align: center;
+}
+
+/* ---------- Field guide ---------- */
+.tutorial-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+}
+
+.tutorial-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.tutorial-table th,
+.tutorial-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+  text-align: left;
+  vertical-align: top;
+}
+
+.tutorial-table tbody tr:last-child th,
+.tutorial-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tutorial-table thead th {
+  background-color: #f9fafb;
+  border-bottom-color: #e5e7eb;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.tutorial-table tbody th {
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+}
+
+/* ---------- Good to know ---------- */
+.tutorial-note {
+  margin-top: 1rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid #d1e7c9;
+  border-radius: 0.75rem;
+  background-color: #f3f9f0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.tutorial-note > strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #166534;
+}
+
+.tutorial-note ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+
+.tutorial-note li + li {
+  margin-top: 0.25rem;
+}
+
+/* ---------- Glossary ---------- */
+.tutorial-glossary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.tutorial-glossary dl {
+  margin: 0;
+}
+
+.tutorial-glossary dl > div {
+  display: grid;
+  grid-template-columns: 9.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid #f3f4f6;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.tutorial-glossary dt {
+  font-weight: 600;
+  color: #111827;
+}
+
+.tutorial-glossary dd {
+  margin: 0;
+}
+
+/* ---------- Common mistakes ---------- */
+.tutorial-mistakes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.875rem;
+  margin: 0;
+}
+
+.tutorial-mistakes > div {
+  padding: 0.875rem 1rem;
+  border: 1px solid #f3d6d6;
+  border-left: 4px solid #dc2626;
+  border-radius: 0.75rem;
+  background-color: #fffafa;
+}
+
+.tutorial-mistakes dt {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #991b1b;
+  overflow-wrap: anywhere;
+}
+
+.tutorial-mistakes dd {
+  margin: 0.375rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+/* ---------- Footer ---------- */
+.tutorial-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  width: 100%;
+  max-width: var(--tutorial-width);
+  margin: 0 auto;
+  padding: 1rem 2rem 2rem;
+  box-sizing: border-box;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* ---------- Tablets: one column, the steps below the walkthrough ---------- */
+@media (max-width: 1024px) {
+  .tutorial-hero-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tutorial-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tutorial-stage-side {
+    border-left: none;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .tutorial-stage-side-scroll {
+    position: static;
+    overflow-y: visible;
+  }
+}
+
+/* ---------- Small screens ---------- */
+@media (max-width: 720px) {
+  .tutorial-topbar {
+    padding: 0.625rem 1rem;
+  }
+
+  .tutorial-hero-inner {
+    padding: 2.25rem 1rem 4.75rem;
+  }
+
+  .tutorial-main {
+    padding: 0 1rem 0.5rem;
+  }
+
+  .tutorial-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding: 0.625rem;
+  }
+
+  .tutorial-tab {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.9375rem;
+  }
+
+  .tutorial-stage-media {
+    padding: 0.75rem;
+  }
+
+  .tutorial-stage-side-scroll,
+  .tutorial-block {
+    padding: 1rem;
+  }
+
+  /* Before it is opened, the walkthrough does not need its full height */
+  .tutorial-walkthrough-start {
+    height: 16rem;
+  }
+
+  .tutorial-footer {
+    padding: 1rem 1rem 1.5rem;
+  }
+
+  .tutorial-mistakes {
+    grid-template-columns: 1fr;
+  }
+
+  .tutorial-glossary {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .tutorial-glossary dl > div {
+    grid-template-columns: 1fr;
+    gap: 0.125rem;
+  }
+
+  /* Field guide: each field becomes a small card instead of a wide table */
+  .tutorial-table-wrapper {
+    border: none;
+    border-radius: 0;
+  }
+
+  .tutorial-table,
+  .tutorial-table tbody,
+  .tutorial-table tr,
+  .tutorial-table th,
+  .tutorial-table td {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .tutorial-table thead {
+    display: none;
+  }
+
+  .tutorial-table tbody tr {
+    padding: 0.75rem 0;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .tutorial-table tbody tr:first-child {
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .tutorial-table tbody th,
+  .tutorial-table td {
+    padding: 0.125rem 0;
+    border-bottom: none;
+    white-space: normal;
+  }
+
+  .tutorial-table tbody th {
+    font-size: 1rem;
+  }
+
+  .tutorial-table td::before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+    color: #6b7280;
+  }
+}
+
+/* Phones: the four cards stay two by two and lose their description, so the guide is not pushed far down */
+@media (max-width: 520px) {
+  .tutorial-hero-cards {
+    gap: 0.625rem;
+    margin-top: 1.75rem;
+  }
+
+  .tutorial-hero-card {
+    padding: 0.875rem;
+    border-radius: 1rem;
+  }
+
+  .tutorial-hero-card-top {
+    margin-bottom: 0.375rem;
+  }
+
+  .tutorial-hero-card-number {
+    font-size: 1.5rem;
+  }
+
+  .tutorial-hero-card-top svg {
+    width: 2rem;
+    height: 2rem;
+    padding: 0.375rem;
+  }
+
+  .tutorial-hero-card strong {
+    font-size: 1rem;
+  }
+
+  .tutorial-hero-card-summary {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .tutorial-brand-text small {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-hero-card,
+  .tutorial-video-play-icon {
+    transition: none;
+  }
+
+  .tutorial-hero-card:hover {
+    transform: none;
+  }
+}

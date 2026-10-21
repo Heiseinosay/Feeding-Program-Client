@@ -14,7 +14,7 @@ export const TUTORIAL_PAGE = {
     workflowNote: "New here? Follow the tabs in order.",
     helpText: "Need help? Contact your administrator.",
     // Change this date whenever the text below is edited
-    lastUpdated: "October 12, 2026",
+    lastUpdated: "October 21, 2026",
 };
 
 // STATUS LABELS (glossary of the Record BMI tab)
@@ -63,7 +63,7 @@ export const TUTORIAL_TABS = [
         ],
         fields: [
             { field: "Section Name", required: "Yes", format: "Text", example: "Section A" },
-            { field: "Grade Level", required: "Yes", format: "Choose from the list: Pre-elementary or Grade 8", example: "Grade 8" },
+            { field: "Grade Level", required: "Yes", format: "Choose from the list: Kinder or Grade 7", example: "Grade 7" },
         ],
         next: [
             "A green message appears: \"Success! Section A has been created successfully!\"",
@@ -77,7 +77,7 @@ export const TUTORIAL_TABS = [
                 fix: "**Section Name** or **Grade Level** is empty. Fill in both, then click **Add Section** again.",
             },
             {
-                message: "\"A section Section A for Grade 8 already exists.\"",
+                message: "\"A section Section A for Grade 7 already exists.\"",
                 fix: "You already have a section with the same name in the same grade level. Use a different name. Capital and small letters count as the same, so \"section a\" and \"Section A\" are one name. The same name is allowed in a different grade level.",
             },
             {
@@ -127,7 +127,7 @@ export const TUTORIAL_TABS = [
             { field: "Last Name", required: "Yes", format: "Text", example: "Dela Cruz" },
             { field: "Sex", required: "Yes", format: "Choose Male or Female", example: "Male" },
             { field: "Birthday", required: "Yes", format: "A date. It cannot be in the future.", example: "March 10, 2015" },
-            { field: "Grade Level", required: "Yes", format: "Choose from the list. It shows only grade levels that have a section.", example: "Grade 8" },
+            { field: "Grade Level", required: "Yes", format: "Choose from the list. It shows only grade levels that have a section.", example: "Grade 7" },
             { field: "Section", required: "Yes", format: "Choose from the list, after the grade level", example: "Section A" },
             { field: "Height (cm)", required: "Yes", format: "A number in centimetres, up to 250. One decimal place is allowed.", example: "135.5" },
             { field: "Weight (kg)", required: "Yes", format: "A number in kilograms, up to 200. One decimal place is allowed.", example: "30.2" },
@@ -284,7 +284,7 @@ export const TUTORIAL_TABS = [
         ],
         fields: [
             { field: "Date", required: "Yes", format: "A weekday (Mon–Fri), today or later, not a holiday. One session per week.", example: "Tuesday, November 10, 2026" },
-            { field: "Participating Sections", required: "Yes", format: "Tick one or more sections", example: "Grade 8 - Section A" },
+            { field: "Participating Sections", required: "Yes", format: "Tick one or more sections", example: "Grade 7 - Section A" },
             { field: "Sponsors", required: "No", format: "Text", example: "School MOOE, PTA" },
             { field: "Total Cost (₱)", required: "No", format: "An amount in pesos, with at most 2 decimal places. The most allowed is ₱99,999,999.99.", example: "1500.00" },
             { field: "Foods Served", required: "Yes", format: "At least one food, up to 20. Each name has 2 to 100 characters, and each food needs a group.", example: "Rice (Go), Boiled egg (Grow)" },

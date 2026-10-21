@@ -115,6 +115,13 @@ function Students() {
     });
     // Section data with default active section
     const [sections, setSections] = useState([]);
+    // Grade levels [{ value: 0, label: "Kinder" }, ...]: the server's list (server/grades.py), sent with the sections.
+    // The forms send the value (a code); the label is only shown.
+    const [gradeLevels, setGradeLevels] = useState([]);
+    const gradeLabelFor = (code) =>
+        gradeLevels.find((grade) => String(grade.value) === String(code))?.label || "";
+    // Two section names are "the same" whatever their case or spacing (same rule as section_name_key in server/section.py)
+    const sectionNameKey = (name) => String(name ?? "").trim().split(/\s+/).join(" ").toLowerCase();
 
     const [activeSection, setActiveSection] = useState(null);
     const [editingSection, setEditingSection] = useState(null);
@@ -134,19 +141,19 @@ function Students() {
 
     const handleAddSection = () => {
         const sectionName = addSectionForm.name.trim();
-        const sectionGrade = addSectionForm.grade.trim();
-        console.log(sectionGrade)
+        // The grade code chosen in the dropdown, and its label
+        const sectionGradeCode = addSectionForm.grade.trim();
+        const sectionGrade = gradeLabelFor(sectionGradeCode);
 
-        if (!sectionName || !sectionGrade) {
+        if (!sectionName || !sectionGradeCode || !sectionGrade) {
             return;
         }
 
         const normalizedSection = sectionName.toLowerCase();
-        const normalizedGrade = sectionGrade.toLowerCase();
         const sectionExists = sections.some(
             (section) =>
                 section.name.trim().toLowerCase() === normalizedSection &&
-                section.grade.trim().toLowerCase() === normalizedGrade
+                String(section.gradeLevel) === sectionGradeCode
         );
 
         if (sectionExists) {
@@ -163,7 +170,7 @@ function Students() {
 
         const payload = {
             sectionName,
-            grade: sectionGrade,
+            grade: Number(sectionGradeCode),
             userId: user?.id,
             lastName: user?.last_name
         };
@@ -183,6 +190,7 @@ function Students() {
                 id: createdSectionId,
                 name: sectionName,
                 grade: sectionGrade,
+                gradeLevel: Number(sectionGradeCode),
                 createdAt: currentDate,
             };
 
@@ -234,7 +242,7 @@ function Students() {
         setEditingSection(section);
         setEditForm({
             name: section.name,
-            grade: section.grade,
+            grade: String(section.gradeLevel ?? ""),
         });
     };
 
@@ -256,18 +264,33 @@ function Students() {
         }
 
         const trimmedName = editForm.name.trim();
-        const trimmedGrade = editForm.grade.trim();
+        // The grade code chosen in the dropdown, and its label
+        const trimmedGradeCode = editForm.grade.trim();
+        const trimmedGrade = gradeLabelFor(trimmedGradeCode);
 
-        if (!trimmedName || !trimmedGrade) {
+        if (!trimmedName || !trimmedGradeCode || !trimmedGrade) {
         return;
         }
 
         const currentName = editingSection.name?.trim() || "";
-        const currentGrade = editingSection.grade?.trim() || "";
+        const currentGradeCode = String(editingSection.gradeLevel ?? "");
         const hasChanges =
-        trimmedName !== currentName || trimmedGrade !== currentGrade;
+        trimmedName !== currentName || trimmedGradeCode !== currentGradeCode;
 
         if (!hasChanges) {
+        return;
+        }
+
+        // Same name in the same grade as another of this teacher's sections (the server checks it too)
+        const nameKey = sectionNameKey(trimmedName);
+        const sectionExists = sections.some(
+            (section) =>
+                section.id !== editingSection.id &&
+                String(section.gradeLevel) === trimmedGradeCode &&
+                sectionNameKey(section.name) === nameKey
+        );
+        if (sectionExists) {
+        alert(`A section ${trimmedName} for ${trimmedGrade} already exists.`);
         return;
         }
 
@@ -281,7 +304,7 @@ function Students() {
         lastName: user?.last_name,
         sectionId: editingSection.id,
         newSectionName: trimmedName,
-        newGradeLevel: trimmedGrade,
+        newGradeLevel: Number(trimmedGradeCode),
         };
 
         console.log(payload)
@@ -291,15 +314,24 @@ function Students() {
         .then((response) => {
             const status = response.data?.status;
             if (!status) {
-            alert("Something went wrong. Try again later!");
+            alert(response.data?.message || "Something went wrong. Try again later!");
             return;
             }
         
 
+            // The server also changed this section's students (their copy of its name and grade)
+            setStudents((prevStudents) =>
+            prevStudents.map((student) =>
+                String(student.sectionId ?? "") === String(editingSection.id)
+                ? { ...student, section: trimmedName, grade: trimmedGrade }
+                : student
+            )
+            );
+
             setSections(prevSections =>
             prevSections.map(section =>
                 section.id === editingSection.id
-                ? { ...section, name: trimmedName, grade: trimmedGrade }
+                ? { ...section, name: trimmedName, grade: trimmedGrade, gradeLevel: Number(trimmedGradeCode) }
                 : section
             )
             );
@@ -310,6 +342,7 @@ function Students() {
                 ...editingSection,
                 name: trimmedName,
                 grade: trimmedGrade,
+                gradeLevel: Number(trimmedGradeCode),
             });
             }
 
@@ -477,21 +510,6 @@ function Students() {
         ? Boolean(studentAttendanceLoadingIds[selectedStudent.id])
         : false;
 
-    const formatGradeLabel = (value) => {
-        const text = String(value ?? "").trim();
-        if (!text) {
-            return "";
-        }
-        const lower = text.toLowerCase();
-        if (lower.startsWith("grade")) {
-            return text;
-        }
-        if (["pre-elementary", "pre elementary", "preelementary", "0"].includes(lower)) {
-            return "Pre-elementary";
-        }
-        return `Grade ${text}`;
-    };
-
     const formatSexLabel = (value) => {
         if (value === "M") {
             return "Male";
@@ -604,7 +622,7 @@ function Students() {
             hfaStatus: latest?.hfaStatus ?? "",
             lastMeasurement: latest?.date || "No data",
             participation: student.participation ?? "participated",
-            grade: formatGradeLabel(student.grade_level ?? ""),
+            grade: student.grade_label ?? "",
             section: student.section_name ?? "",
             sectionId: student.section_id ?? "",
             history,
@@ -619,18 +637,21 @@ function Students() {
         return leftValue !== "" && leftValue === rightValue;
     };
 
-    const gradeOptions = sections.reduce((acc, section) => {
-        const grade = section?.grade?.trim();
-        if (!grade) {
+    // Grades that have at least one section, in grade order (Kinder first)
+    const gradeOptions = [...sections]
+        .sort((left, right) => Number(left?.gradeLevel) - Number(right?.gradeLevel))
+        .reduce((acc, section) => {
+            const grade = section?.grade?.trim();
+            if (!grade) {
+                return acc;
+            }
+            const key = grade.toLowerCase();
+            if (!acc.map.has(key)) {
+                acc.map.set(key, grade);
+                acc.list.push(grade);
+            }
             return acc;
-        }
-        const key = grade.toLowerCase();
-        if (!acc.map.has(key)) {
-            acc.map.set(key, grade);
-            acc.list.push(grade);
-        }
-        return acc;
-    }, { list: [], map: new Map() }).list;
+        }, { list: [], map: new Map() }).list;
 
     const filteredSections = formData.grade
         ? sections.filter((section) => isSameGrade(section.grade, formData.grade))
@@ -683,6 +704,7 @@ function Students() {
         .then((response) => {
             const data = response.data;
             console.log(data)
+            setGradeLevels(Array.isArray(data?.grades) ? data.grades : []);
             if (!data?.status) {
                 setSections([]);
                 setActiveSection(null);
@@ -876,7 +898,7 @@ function Students() {
             ];
             const rows = activeSectionStudents.map((student) => [
                 student.name,
-                student.grade || formatGradeLabel(activeSection.grade),
+                student.grade || activeSection.grade,
                 activeSection.name,
                 student.birthday,
                 student.ageLabel,
@@ -1756,7 +1778,7 @@ function Students() {
         lastName: formData.lastName.trim(),
         sex: formData.sex,
         birthday: formData.birthday,
-        grade: formData.grade.trim(),
+        grade: sections.find((section) => isSameGrade(section.grade, formData.grade))?.gradeLevel ?? formData.grade.trim(),
         section: formData.section,
         height: Number(formData.height),
         weight: Number(formData.weight),
@@ -2416,8 +2438,9 @@ function Students() {
                                 className="section-edit-input"
                                 >
                                 <option value="">Select grade</option>
-                                <option value="Pre-elementary">Pre-elementary</option>
-                                <option value="Grade 8">Grade 8</option>
+                                {gradeLevels.map((grade) => (
+                                <option key={grade.value} value={String(grade.value)}>{grade.label}</option>
+                                ))}
                                 </select>
                             </div>
                             </div>
@@ -2493,8 +2516,9 @@ function Students() {
                                 className="section-edit-input"
                                 >
                                 <option value="">Select grade</option>
-                                <option value="Pre-elementary">Pre-elementary</option>
-                                <option value="Grade 8">Grade 8</option>
+                                {gradeLevels.map((grade) => (
+                                <option key={grade.value} value={String(grade.value)}>{grade.label}</option>
+                                ))}
                                 </select>
                             </div>
 
@@ -2772,7 +2796,7 @@ function Students() {
                                 {section.name}
                                 </div>
                                 <div className="students-measurement-tab-sub">
-                                {formatGradeLabel(section.grade) || "Grade"} • {count} student{count === 1 ? "" : "s"}
+                                {section.grade || "Grade"} • {count} student{count === 1 ? "" : "s"}
                                 </div>
                             </button>
                             );

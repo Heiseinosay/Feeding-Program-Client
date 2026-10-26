@@ -16,10 +16,13 @@ const ADDRESS_MAX_LENGTH = 255;
 const CONTACT_PERSON_MAX_LENGTH = 255;
 const CONTACT_NUMBER_MAX_LENGTH = 50;
 const EMAIL_MAX_LENGTH = 255;
+const DISTRICT_SCHOOL_ID_MAX_LENGTH = 20;
 const PAGE_SIZE = 10;
 
 const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const CONTACT_NUMBER_PATTERN = /^[0-9+\-() ]+$/;
+// Typed in capitals (the box turns letters into capitals as they are typed)
+const DISTRICT_SCHOOL_ID_PATTERN = /^[A-Z0-9]+$/;
 
 const STATUS_FILTERS = [
     { value: "active", label: "Active" },
@@ -46,15 +49,18 @@ const EMPTY_FORM = {
     contactNumber: "",
     email: "",
     isActive: true,
+    // Typed when adding a school; "" = use the suggestion. Never sent when editing: it can't change.
+    districtSchoolId: "",
 };
 
-// DISTRICT SCHOOL ID (preview only: the server builds the real one, see school_abbreviation in server/admin.py)
-// The abbreviation of the school's name: first letter (or digit) of every word, in capitals,
-// accents removed, small words skipped.
+// DISTRICT SCHOOL ID SUGGESTION (the same rule as school_abbreviation in server/admin.py)
+// Shown in the Add form until the admin types their own. The abbreviation of the school's name:
+// first letter (or digit) of every word, in capitals, accents removed, small words skipped.
 //   Nueva Ecija High School       -> NEHS
 //   Sto. Niño Elementary School   -> SNES
 //   Science High School of Cabiao -> SHSC
-// The server adds a number when another school already has the same letters (NEHS2).
+// When the box is left as the suggestion, the server adds a number if another school already has
+// the same letters (NEHS2).
 const SCHOOL_ABBREVIATION_MAX_LENGTH = 16;
 const SCHOOL_ABBREVIATION_SKIPPED_WORDS = new Set(["of", "the", "and", "for", "in", "at", "ng", "sa", "mga"]);
 
@@ -77,16 +83,6 @@ const schoolAbbreviation = (schoolName) => {
         });
     // A name made only of small words keeps them all
     return (keptInitials.length ? keptInitials : everyInitial).join("").slice(0, SCHOOL_ABBREVIATION_MAX_LENGTH);
-};
-
-// What the form shows as the District School ID for the name typed so far.
-// A school whose present id already fits its name keeps it (NEHS2 stays NEHS2), exactly as the server does.
-const previewDistrictSchoolId = (schoolName, currentId) => {
-    const abbreviation = schoolAbbreviation(schoolName);
-    if (currentId && abbreviation && new RegExp(`^${abbreviation}\\d*$`, "i").test(currentId)) {
-        return currentId;
-    }
-    return abbreviation;
 };
 
 // Search key: ignores case, extra spaces and accents
@@ -135,12 +131,21 @@ const compareSchools = (a, b, column, direction) => {
     return direction === "asc" ? result : -result;
 };
 
-// Returns { field: message } for the Add / Edit form
-const validateSchoolForm = (form) => {
+// Returns { field: message } for the Add / Edit form. The District School ID is checked only when adding.
+const validateSchoolForm = (form, isAdding) => {
     const errors = {};
     const name = form.schoolName.replace(/\s+/g, " ").trim();
     const contactNumber = form.contactNumber.trim();
     const email = form.email.trim();
+    const districtSchoolId = form.districtSchoolId.trim();
+
+    if (isAdding && districtSchoolId) {
+        if (districtSchoolId.length > DISTRICT_SCHOOL_ID_MAX_LENGTH) {
+            errors.districtSchoolId = `District School ID can't be longer than ${DISTRICT_SCHOOL_ID_MAX_LENGTH} characters.`;
+        } else if (!DISTRICT_SCHOOL_ID_PATTERN.test(districtSchoolId)) {
+            errors.districtSchoolId = "Use letters and numbers only, without spaces.";
+        }
+    }
 
     if (!name) {
         errors.schoolName = "School name is required.";
@@ -316,6 +321,7 @@ function AdminSchools() {
             contactNumber: school.contact_number || "",
             email: school.email || "",
             isActive: Boolean(school.is_active),
+            districtSchoolId: "",
         });
         setFormErrors({});
         setFormMessage("");
@@ -335,12 +341,12 @@ function AdminSchools() {
         setFormMessage("");
     };
 
-    // Read-only District School ID shown in the form, for the name typed so far
-    const districtSchoolIdPreview = previewDistrictSchoolId(form.schoolName, editingSchool?.district_school_id);
-    const districtSchoolIdWillChange =
-        Boolean(editingSchool?.district_school_id) &&
-        Boolean(districtSchoolIdPreview) &&
-        districtSchoolIdPreview !== editingSchool.district_school_id;
+    // District School ID box: when adding, what the admin typed, or else the suggestion for the name
+    // typed so far; when editing, the school's own id (read-only: it never changes).
+    const districtSchoolIdSuggestion = schoolAbbreviation(form.schoolName);
+    const districtSchoolIdValue = editingSchool
+        ? editingSchool.district_school_id || ""
+        : form.districtSchoolId || districtSchoolIdSuggestion;
 
     const handleSaveSchool = (e) => {
         e.preventDefault();
@@ -348,14 +354,13 @@ function AdminSchools() {
             return;
         }
 
-        const errors = validateSchoolForm(form);
+        const errors = validateSchoolForm(form, !editingSchool);
         setFormErrors(errors);
         if (Object.keys(errors).length) {
             setFormMessage("Please fix the highlighted fields.");
             return;
         }
 
-        // The District School ID is never sent: the server builds it from the school name
         const payload = {
             schoolName: form.schoolName,
             address: form.address,
@@ -364,6 +369,11 @@ function AdminSchools() {
             email: form.email,
             isActive: form.isActive,
         };
+        // Sent only when adding, and only when typed: empty lets the server use the suggestion
+        // (with a number added if another school already has those letters)
+        if (!editingSchool) {
+            payload.districtSchoolId = form.districtSchoolId.trim();
+        }
 
         setIsSaving(true);
         const request = editingSchool
@@ -730,21 +740,27 @@ function AdminSchools() {
                                     </div>
 
                                     <div className="admin-form-field">
-                                        {/* Never typed: the abbreviation of the school name, built by the server on save */}
+                                        {/* Set once: typed (or the suggestion kept) when adding, read-only when editing */}
                                         <label htmlFor="school-district-id">District School ID</label>
                                         <input
                                             id="school-district-id"
                                             type="text"
-                                            value={districtSchoolIdPreview}
-                                            readOnly
-                                            aria-describedby="school-district-id-hint"
-                                            placeholder="Enter the school name"
+                                            value={districtSchoolIdValue}
+                                            readOnly={Boolean(editingSchool)}
+                                            maxLength={DISTRICT_SCHOOL_ID_MAX_LENGTH}
+                                            onChange={editingSchool ? undefined : (e) => handleFormChange("districtSchoolId", e.target.value.toUpperCase())}
+                                            className={formErrors.districtSchoolId ? "error" : ""}
+                                            aria-invalid={Boolean(formErrors.districtSchoolId)}
+                                            aria-describedby={formErrors.districtSchoolId ? "school-district-id-error school-district-id-hint" : "school-district-id-hint"}
+                                            autoComplete="off"
+                                            spellCheck={false}
+                                            placeholder="e.g. NEHS"
                                         />
+                                        {formErrors.districtSchoolId ? <span id="school-district-id-error" className="admin-form-error">{formErrors.districtSchoolId}</span> : null}
                                         <span id="school-district-id-hint" className="admin-form-hint">
-                                            {districtSchoolIdWillChange
-                                                ? `Changes from ${editingSchool.district_school_id} when you save, because the school name changed. `
-                                                : "Set automatically from the school name. "}
-                                            A number is added if another school already has the same letters.
+                                            {editingSchool
+                                                ? "Set when the school was added. It can't be changed."
+                                                : "Suggested from the school name (a number is added if it's taken). Letters and numbers only. Can't be changed after the school is added."}
                                         </span>
                                     </div>
 
